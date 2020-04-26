@@ -1,3 +1,8 @@
+import java.io.File
+import kotlin.collections.HashMap
+import kotlin.math.pow
+import kotlin.math.sqrt
+
 fun main() {
 
     val graph = arrayOf(
@@ -33,11 +38,18 @@ fun main() {
         doubleArrayOf(7.0, 3.0, 8.0, 6.0, 0.0)
     )
 
-    val set = graph.mapIndexed { index, _ -> index }.toSet()
+    val graph4 = readDistances("/Users/nadezhdavlasenko/IdeaProjects/NewPost/src/graph2")
 
-    set.forEach {
-        mins[TSP(it, emptySet())] = graph[it][0]
-    }
+
+    val graph3 = arrayOf(
+        doubleArrayOf(0.0, 27.0, 12.1, 17.7, 11.0, 29.2, 22.4),
+        doubleArrayOf(27.0, 0.0, 16.8, 11.2, 29.2, 11.0, 31.8),
+        doubleArrayOf(12.1, 16.8, 0.0, 6.0, 12.5, 17.1, 27.9),
+        doubleArrayOf(17.7, 11.2, 6.0, 0.0, 18.0, 11.7, 30.0),
+        doubleArrayOf(11.0, 29.2, 12.5, 18.0, 0.0, 27.0, 33.2),
+        doubleArrayOf(29.2, 11.0, 17.1, 11.7, 27.0, 0.0, 40.2),
+        doubleArrayOf(22.4, 31.8, 27.9, 30.0, 33.2, 40.2, 0.0)
+    )
 
     var res: Double = Double.MIN_VALUE
     // 80
@@ -45,21 +57,32 @@ fun main() {
     println("Memoization: time = $time, res = $res")
     time = measureTimeMillis { res = travelRecursively(graph) }
     println("Recursion:   time = $time, res = $res")
-    // 19
+    // 19 1->3->2->5->4
     time = measureTimeMillis { res = travelMemoize(graph2) }
     println("Memoization: time = $time, res = $res")
     time = measureTimeMillis { res = travelRecursively(graph2) }
     println("Recursion:   time = $time, res = $res")
+    // 106.4
+    time = measureTimeMillis { res = travelMemoize(graph3) }
+    println("Memoization: time = $time, res = $res")
+    time = measureTimeMillis { res = travelRecursively(graph3) }
+    println("Recursion:   time = $time, res = $res")
+    // 14.28538328578604
+    time = measureTimeMillis { res = travelMemoize(graph4) }
+    println("Memoization: time = $time, res = $res")
+    time = measureTimeMillis { res = travelRecursively(graph4) }
+    println("Recursion:   time = $time, res = $res")
 
-    // println(TSP(graph1, setOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14), 0, Double.MAX_VALUE)) //291
 }
+
 fun travelRecursively(graph: Array<DoubleArray>): Double = TSP(graph, graph.indices.toSet(), 0, Double.MAX_VALUE)
 
 fun travelMemoize(graph: Array<DoubleArray>): Double {
+    val mins = HashMap<TSP, Double>()
     graph.indices.forEach {
         mins[TSP(it, emptySet())] = graph[it][0]
     }
-    return TSPmemoize(graph, graph.indices.toSet(), 0, Double.MAX_VALUE)
+    return TSPmemoize(graph, graph.indices.toSet(), 0, Double.MAX_VALUE, mins)
 }
 
 fun TSP(graph: Array<DoubleArray>, set: Set<Int>, destPoint: Int, min: Double): Double {
@@ -72,17 +95,17 @@ fun TSP(graph: Array<DoubleArray>, set: Set<Int>, destPoint: Int, min: Double): 
 }
 
 
-fun TSPmemoize(graph: Array<DoubleArray>, set: Set<Int>, destPoint: Int, min: Double): Double {
+fun TSPmemoize(graph: Array<DoubleArray>, set: Set<Int>, destPoint: Int, min: Double, mins: HashMap<TSP, Double>): Double {
     if (mins.containsKey(TSP(destPoint, set))) return mins[TSP(destPoint, set)]!!
     var localMin = min
     set.forEach {
-        localMin = minOf(localMin, graph[it][destPoint] + TSPmemoize(graph, set - it, it, localMin))
+        localMin = minOf(localMin, graph[it][destPoint] + TSPmemoize(graph, set - it, it, localMin, mins))
     }
     mins[TSP(destPoint, set)] = localMin
     return localMin
 }
 
-val mins = HashMap<TSP, Double>()
+
 
 class TSP {
     val destPoint: Int
@@ -100,9 +123,7 @@ class TSP {
         other as TSP
 
         if (destPoint != other.destPoint) return false
-        if (set.size != other.set.size) return false
-        if (set.isEmpty()) return true
-        if (!set.containsAll(other.set)) return false
+        if (set != other.set) return false
 
         return true
     }
@@ -119,4 +140,25 @@ inline fun measureTimeMillis(block: () -> Unit): Long {
     val start = System.currentTimeMillis()
     block()
     return System.currentTimeMillis() - start
+}
+
+
+fun readDistances(coordinatesPath: String): Array<DoubleArray> {
+    val xy = mutableListOf<List<Double>>()
+    File(coordinatesPath)
+        .forEachLine { xy.add(
+            it.split(" ")
+                .map { it.toDouble() }) }
+    val graph = Array(xy.size) { DoubleArray(xy.size, {0.0}) }
+
+    xy.forEachIndexed { index, list ->
+        for (i in index until xy.size) {
+            val dist = sqrt((list[0] - xy[i][0]).pow(2) + (list[1] - xy[i][1]).pow(2))
+            println("x1 = ${list[0]}; x2 = ${xy[i][0]}; y1 = ${list[1]}; y2 = ${xy[i][1]}}")
+            println("dist = $dist")
+            graph[index][i] = dist
+            graph[i][index] = graph[index][i]
+        }
+    }
+    return graph
 }
