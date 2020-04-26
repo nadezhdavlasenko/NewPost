@@ -38,9 +38,6 @@ fun main() {
         doubleArrayOf(7.0, 3.0, 8.0, 6.0, 0.0)
     )
 
-    val graph4 = readDistances("/Users/nadezhdavlasenko/IdeaProjects/NewPost/src/graph2")
-
-
     val graph3 = arrayOf(
         doubleArrayOf(0.0, 27.0, 12.1, 17.7, 11.0, 29.2, 22.4),
         doubleArrayOf(27.0, 0.0, 16.8, 11.2, 29.2, 11.0, 31.8),
@@ -50,6 +47,8 @@ fun main() {
         doubleArrayOf(29.2, 11.0, 17.1, 11.7, 27.0, 0.0, 40.2),
         doubleArrayOf(22.4, 31.8, 27.9, 30.0, 33.2, 40.2, 0.0)
     )
+
+    val graph4 = readDistances("/Users/nadezhdavlasenko/IdeaProjects/NewPost/src/graph2")
 
     var res: Double = Double.MIN_VALUE
     // 80
@@ -86,7 +85,13 @@ fun TSP(graph: Array<DoubleArray>, set: Set<Int>, destPoint: Int, min: Double): 
 }
 
 
-fun TSPmemoize(graph: Array<DoubleArray>, set: Set<Int>, destPoint: Int, min: Double, mins: HashMap<TSP, Double>): Double {
+fun TSPmemoize(
+    graph: Array<DoubleArray>,
+    set: Set<Int>,
+    destPoint: Int,
+    min: Double,
+    mins: HashMap<TSP, Double>
+): Double {
     if (mins.containsKey(TSP(destPoint, set))) return mins[TSP(destPoint, set)]!!
     var localMin = min
     set.forEach {
@@ -95,7 +100,6 @@ fun TSPmemoize(graph: Array<DoubleArray>, set: Set<Int>, destPoint: Int, min: Do
     mins[TSP(destPoint, set)] = localMin
     return localMin
 }
-
 
 
 class TSP {
@@ -137,10 +141,12 @@ inline fun measureTimeMillis(block: () -> Unit): Long {
 fun readDistances(coordinatesPath: String): Array<DoubleArray> {
     val xy = mutableListOf<List<Double>>()
     File(coordinatesPath)
-        .forEachLine { xy.add(
-            it.split(" ")
-                .map { it.toDouble() }) }
-    val graph = Array(xy.size) { DoubleArray(xy.size, {0.0}) }
+        .forEachLine {
+            xy.add(
+                it.split(" ")
+                    .map { it.toDouble() })
+        }
+    val graph = Array(xy.size) { DoubleArray(xy.size, { 0.0 }) }
 
     xy.forEachIndexed { index, list ->
         for (i in index until xy.size) {
