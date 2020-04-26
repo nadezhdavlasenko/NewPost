@@ -53,26 +53,17 @@ fun main() {
 
     var res: Double = Double.MIN_VALUE
     // 80
-    var time = measureTimeMillis { res = travelMemoize(graph) }
-    println("Memoization: time = $time, res = $res")
-    time = measureTimeMillis { res = travelRecursively(graph) }
-    println("Recursion:   time = $time, res = $res")
+    logMemoization(graph)
+    logRecursion(graph)
     // 19 1->3->2->5->4
-    time = measureTimeMillis { res = travelMemoize(graph2) }
-    println("Memoization: time = $time, res = $res")
-    time = measureTimeMillis { res = travelRecursively(graph2) }
-    println("Recursion:   time = $time, res = $res")
+    logMemoization(graph2)
+    logRecursion(graph2)
     // 106.4
-    time = measureTimeMillis { res = travelMemoize(graph3) }
-    println("Memoization: time = $time, res = $res")
-    time = measureTimeMillis { res = travelRecursively(graph3) }
-    println("Recursion:   time = $time, res = $res")
+    logMemoization(graph3)
+    logRecursion(graph3)
     // 14.28538328578604
-    time = measureTimeMillis { res = travelMemoize(graph4) }
-    println("Memoization: time = $time, res = $res")
-    time = measureTimeMillis { res = travelRecursively(graph4) }
-    println("Recursion:   time = $time, res = $res")
-
+    logMemoization(graph4)
+    logRecursion(graph4)
 }
 
 fun travelRecursively(graph: Array<DoubleArray>): Double = TSP(graph, graph.indices.toSet(), 0, Double.MAX_VALUE)
@@ -154,11 +145,21 @@ fun readDistances(coordinatesPath: String): Array<DoubleArray> {
     xy.forEachIndexed { index, list ->
         for (i in index until xy.size) {
             val dist = sqrt((list[0] - xy[i][0]).pow(2) + (list[1] - xy[i][1]).pow(2))
-            println("x1 = ${list[0]}; x2 = ${xy[i][0]}; y1 = ${list[1]}; y2 = ${xy[i][1]}}")
-            println("dist = $dist")
             graph[index][i] = dist
             graph[i][index] = graph[index][i]
         }
     }
     return graph
+}
+
+fun logRecursion(graph: Array<DoubleArray>) {
+    var res: Double = Double.MIN_VALUE
+    val time = measureTimeMillis { res = travelRecursively(graph) }
+    println("Recursion:   time = %2d, res = %7.3f".format(time, res))
+}
+
+fun logMemoization(graph: Array<DoubleArray>) {
+    var res: Double = Double.MIN_VALUE
+    val time = measureTimeMillis { res = travelMemoize(graph) }
+    println("Memoization: time = %2d, res = %7.3f".format(time, res))
 }
