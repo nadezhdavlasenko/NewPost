@@ -1,6 +1,5 @@
 import java.io.File
-import kotlin.collections.HashMap
-import kotlin.math.min
+import java.time.Instant
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -51,113 +50,34 @@ fun main() {
 
     val graph4 = readDistances("/Users/nadezhdavlasenko/IdeaProjects/NewPost/src/graph2")
 
-    var res: Double = Double.MIN_VALUE
     // 80
     logMemoizationMask(graph)
     logRecursion(graph)
+    logBruteForce(graph)
 
     // 291
     logMemoizationMask(graph1)
-//    logRecursion(graph1)
+    // logBruteForce(graph1)
+    // logRecursion(graph1)
     // 19 1->3->2->5->4
     logMemoizationMask(graph2)
     logRecursion(graph2)
+    logBruteForce(graph2)
     // 106.4
     logMemoizationMask(graph3)
     logRecursion(graph3)
+    logBruteForce(graph3)
     // 14.28538328578604
     logMemoizationMask(graph4)
     logRecursion(graph4)
+    logBruteForce(graph4)
 }
 
-fun travelRecursively(graph: Array<DoubleArray>): Double = TSP(graph, graph.indices.toSet(), 0, Double.MAX_VALUE)
-
-fun travelMemoizeHashTable(graph: Array<DoubleArray>): Double {
-    val mins = HashMap<TSP, Double>()
-    graph.indices.forEach {
-        mins[TSP(it, emptySet())] = graph[it][0]
-    }
-    return TSPmemoizeHashTable(graph, graph.indices.toSet(), 0, Double.MAX_VALUE, mins)
-}
-
-fun travelMemoizeMask(graph: Array<DoubleArray>): Double {
-    val minDists = Array(1 shl graph.size) { DoubleArray(graph.size) { Double.POSITIVE_INFINITY } }
-    minDists[0][0] = 0.0
-    for (mask in minDists.indices) {
-        for (i in minDists[0].indices) {
-            if (minDists[mask][i] == Double.POSITIVE_INFINITY) continue
-            for (j in minDists[0].indices) {
-                if ((mask and (1 shl j)) == 0) {
-                    minDists[mask or (1 shl j)][j] =
-                        min(minDists[mask or (1 shl j)][j], minDists[mask][i] + graph[i][j])
-                }
-            }
-        }
-    }
-    return minDists[minDists.size - 1][0]
-}
-
-fun TSP(graph: Array<DoubleArray>, set: Set<Int>, destPoint: Int, min: Double): Double {
-    if (set.isEmpty()) return graph[destPoint][0]
-    var localMin = min
-    set.forEach {
-        localMin = minOf(localMin, graph[it][destPoint] + TSP(graph, set - it, it, localMin))
-    }
-    return localMin
-}
-
-
-fun TSPmemoizeHashTable(
-    graph: Array<DoubleArray>,
-    set: Set<Int>,
-    destPoint: Int,
-    min: Double,
-    mins: HashMap<TSP, Double>
-): Double {
-    if (mins.containsKey(TSP(destPoint, set))) return mins[TSP(destPoint, set)]!!
-    var localMin = min
-    set.forEach {
-        localMin = minOf(localMin, graph[it][destPoint] + TSPmemoizeHashTable(graph, set - it, it, localMin, mins))
-    }
-    mins[TSP(destPoint, set)] = localMin
-    return localMin
-}
-
-
-class TSP {
-    val destPoint: Int
-    val set: Set<Int>
-
-    constructor(destPoint: Int, set: Set<Int>) {
-        this.destPoint = destPoint
-        this.set = set
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as TSP
-
-        if (destPoint != other.destPoint) return false
-        if (set != other.set) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = destPoint
-        result = 31 * result + set.hashCode()
-        return result
-    }
-}
-
-inline fun measureTimeMillis(block: () -> Unit): Long {
-    val start = System.currentTimeMillis()
+inline fun measureTimeMillis(block: () -> Unit): Int {
+    val start = Instant.now().nano
     block()
-    return System.currentTimeMillis() - start
+    return Instant.now().nano - start
 }
-
 
 fun readDistances(coordinatesPath: String): Array<DoubleArray> {
     val xy = mutableListOf<List<Double>>()
@@ -179,18 +99,25 @@ fun readDistances(coordinatesPath: String): Array<DoubleArray> {
     return graph
 }
 
+val stringTemplate = "time = %8d, res = %7.3f"
+
 fun logRecursion(graph: Array<DoubleArray>) {
     var res: Double = Double.MIN_VALUE
     val time = measureTimeMillis { res = travelRecursively(graph) }
-    println("Recursion:   time = %2d, res = %7.3f".format(time, res))
-
+    println("Recursion:   $stringTemplate".format(time, res))
 }
 
 fun logMemoizationMask(graph: Array<DoubleArray>) {
     println()
     var res: Double = Double.MIN_VALUE
     val time = measureTimeMillis { res = travelMemoizeMask(graph) }
-    println("Memoization: time = %2d, res = %7.3f".format(time, res))
+    println("Memoization: $stringTemplate".format(time, res))
+}
+
+fun logBruteForce(graph: Array<DoubleArray>) {
+    var res: Double = Double.MIN_VALUE
+    val time = measureTimeMillis { res = travelBruteForce(graph) }
+    println("BruteForce:  $stringTemplate".format(time, res))
 }
 
 fun logMemoizationHashTable(graph: Array<DoubleArray>) {
