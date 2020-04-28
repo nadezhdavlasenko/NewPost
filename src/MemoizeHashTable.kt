@@ -1,3 +1,11 @@
+fun travelMemoizeHashTable(graph: Array<DoubleArray>): Double {
+    val mins = HashMap<TSP, Double>()
+    graph.indices.forEach {
+        mins[TSP(it, emptySet())] = graph[it][0]
+    }
+    return TSPmemoizeHashTable(graph, graph.indices.toSet(), 0, Double.MAX_VALUE, mins)
+}
+
 fun TSPmemoizeHashTable(
     graph: Array<DoubleArray>,
     set: Set<Int>,
